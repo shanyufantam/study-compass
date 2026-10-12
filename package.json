@@ -1,0 +1,13 @@
+{
+  "name": "study-compass",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A browser study dashboard with exam planning and step-by-step math solving.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

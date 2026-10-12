@@ -6,6 +6,16 @@ Study Compass is a browser based study dashboard for planning exams, saving pape
 
 Open `index.html` in a browser. No installation or account is needed. Exam data is saved locally in the browser you use.
 
+## Run from a terminal
+
+Install Node.js 18 or newer, open a terminal in this folder, and run:
+
+```text
+npm start
+```
+
+Then open `http://localhost:3000`. Set another port with `PORT=4000 npm start` on macOS/Linux or `$env:PORT=4000; npm start` in PowerShell.
+
 ## Project files
 
 - `index.html` contains the page structure.
