@@ -16,10 +16,13 @@ Keep your exam dates, paper patterns, revision topics, reminders, and focus sess
 - 📅 **Plan exams** — save subjects, exam dates, start times, duration, and total marks.
 - 🧠 **Track revision** — keep paper patterns and topics to review with each exam.
 - 📊 **Track preparation** — update your preparation progress as you study.
+- ✅ **Plan your day** — add subject-tagged study tasks, check them off, and see your completion progress.
 - 🔔 **Set reminders** — schedule study reminders for upcoming exams.
 - ⏱️ **Focus with a timer** — run, pause, and resume a focused study session.
 - ➗ **Solve maths step by step** — simplify arithmetic, solve one-variable linear equations, and work through systems of linear equations.
-- 💾 **Keep your data in your browser** — exam data is saved in local browser storage; no account is required.
+- 🌙 **Choose your theme** — switch between light and dark mode.
+- 💾 **Back up your work** — export exams and tasks to a JSON file and restore them later.
+- 🔒 **Keep your data in your browser** — study data is saved in local browser storage; no account is required.
 
 ## 🚀 Get started
 
@@ -85,7 +88,7 @@ The solver displays the variable order, augmented matrix, row operations, and fi
 
 ## 🔐 Data and privacy
 
-Study Compass stores exam information in your browser's local storage. Your saved data is tied to the browser and device you use, so it does not automatically sync between devices. If you clear that browser's site data, your saved exams may be removed.
+Study Compass stores exams, daily tasks, and theme preferences in your browser's local storage. Your saved data is tied to the browser and device you use, so it does not automatically sync between devices. Use **Export** to save a JSON backup and **Import** to restore one. Importing a backup replaces the current exams and tasks after confirmation. If you clear that browser's site data, locally saved information may be removed.
 
 ## 🤝 Contributing
 
