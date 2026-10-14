@@ -25,3 +25,104 @@ const KEY='study-compass-exams-v1';
     function showSolution(){const output=$('solution');output.classList.remove('error');try{const result=solveProblem($('mathProblem').value);output.innerHTML=`<strong>Answer: ${esc(result.answer)}</strong><ol>${result.steps.map(step=>`<li>${esc(step)}</li>`).join('')}</ol>`}catch(error){output.classList.add('error');output.innerHTML=`<strong>Let's simplify that.</strong>${esc(error.message)}`}}
     $('solveButton').onclick=showSolution;$('mathProblem').onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')showSolution()};$('clearSolver').onclick=()=>{$('mathProblem').value='';$('solution').classList.remove('error');$('solution').innerHTML='';$('mathProblem').focus()};
     render();
+
+
+// Daily study plan: stored separately so existing exam data remains untouched.
+const TASK_KEY = 'study-compass-tasks-v1';
+const THEME_KEY = 'study-compass-theme-v1';
+let studyTasks = [];
+try { studyTasks = JSON.parse(localStorage.getItem(TASK_KEY) || '[]'); if (!Array.isArray(studyTasks)) studyTasks = []; } catch { studyTasks = []; }
+function saveTasks() {
+  try { localStorage.setItem(TASK_KEY, JSON.stringify(studyTasks)); }
+  catch { toast('Could not save tasks. Check available browser storage.'); }
+  renderTasks();
+}
+function renderTasks() {
+  const completed = studyTasks.filter(task => task.done).length;
+  const total = studyTasks.length;
+  $('taskProgress').textContent = total ? Math.round(completed / total * 100) + '%' : '0%';
+  $('taskProgressText').textContent = `${completed} of ${total} complete`;
+  $('taskHint').textContent = total ? (completed === total ? 'All done — excellent work. 🎉' : `${total - completed} task${total - completed === 1 ? '' : 's'} left. Keep going!`) : 'Add your first task to get started.';
+  $('clearCompleted').hidden = !completed;
+  $('taskList').innerHTML = total ? studyTasks.map(task => `
+    <div class="task-row ${task.done ? 'is-done' : ''}" data-task-id="${esc(task.id)}">
+      <label class="task-check"><input type="checkbox" class="task-toggle" ${task.done ? 'checked' : ''} aria-label="Mark ${esc(task.title)} ${task.done ? 'incomplete' : 'complete'}"><span class="custom-check" aria-hidden="true"></span></label>
+      <div class="task-copy"><span class="task-title">${esc(task.title)}</span><span class="task-category">${esc(task.subject || 'General')}</span></div>
+      <button class="iconbtn task-delete" type="button" aria-label="Delete task: ${esc(task.title)}" title="Delete task">×</button>
+    </div>`).join('') : '<div class="task-empty"><span aria-hidden="true">✦</span><strong>Your next small win starts here.</strong><span>Add a task above to build your study plan.</span></div>';
+}
+$('taskForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const title = $('taskInput').value.trim();
+  if (!title) return;
+  studyTasks.unshift({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())), title, subject: $('taskSubject').value, done: false, createdAt: new Date().toISOString() });
+  saveTasks();
+  $('taskInput').value = '';
+  $('taskInput').focus();
+  toast('Task added to today’s plan.');
+});
+$('taskList').addEventListener('change', event => {
+  if (!event.target.matches('.task-toggle')) return;
+  const row = event.target.closest('[data-task-id]');
+  const task = studyTasks.find(item => item.id === row?.dataset.taskId);
+  if (!task) return;
+  task.done = event.target.checked;
+  saveTasks();
+});
+$('taskList').addEventListener('click', event => {
+  const button = event.target.closest('.task-delete');
+  if (!button) return;
+  const row = button.closest('[data-task-id]');
+  studyTasks = studyTasks.filter(task => task.id !== row?.dataset.taskId);
+  saveTasks();
+  toast('Task removed.');
+});
+$('clearCompleted').addEventListener('click', () => {
+  studyTasks = studyTasks.filter(task => !task.done);
+  saveTasks();
+  toast('Completed tasks cleared.');
+});
+
+// Theme preference.
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  $('themeButton').textContent = theme === 'dark' ? '☼' : '◐';
+  $('themeButton').setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+  $('themeButton').title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  try { localStorage.setItem(THEME_KEY, theme); } catch {}
+}
+let savedTheme = 'light';
+try { savedTheme = localStorage.getItem(THEME_KEY) || 'light'; } catch {}
+setTheme(savedTheme === 'dark' ? 'dark' : 'light');
+$('themeButton').addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+// Portable JSON backup of exams and study tasks.
+$('exportButton').addEventListener('click', () => {
+  const backup = { app: 'Study Compass', schemaVersion: 1, exportedAt: new Date().toISOString(), exams, tasks: studyTasks };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `study-compass-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+  toast('Study backup exported.');
+});
+$('importButton').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    const backup = JSON.parse(await file.text());
+    if (!backup || !Array.isArray(backup.exams) || !Array.isArray(backup.tasks)) throw new Error('This file is not a valid Study Compass backup.');
+    if (!window.confirm('Import this backup? Your current exams and tasks will be replaced. Export a backup first if you want to keep them.')) return;
+    exams = backup.exams;
+    studyTasks = backup.tasks;
+    save();
+    saveTasks();
+    toast('Study backup restored.');
+  } catch (error) {
+    toast(error.message || 'Could not read this backup file.');
+  } finally {
+    event.target.value = '';
+  }
+});
+renderTasks();
